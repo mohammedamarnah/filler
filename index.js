@@ -5,7 +5,7 @@ const Filler = require("./filler.js");
 const bot = new Discord.Client();
 // const client = Redis.createClient();
 
-const TOKEN = 'ODI3NTU0NzgxNTgwNjIzOTMy.YGcucw.ClzsHRSxtlw-eWVnvV-JbQCBhuA';
+const TOKEN = process.env.DISCORD_TOKEN;
 
 const available_commands = {
   "new_game": "initializes a new game.",
