@@ -13,39 +13,6 @@ module.exports = class Filler {
     this.last_move = '';
   }
 
-  generate_board() {
-    for (let i = 0; i < this.size[0]; i++) {
-      let row = []
-      for (let j = 0; j < this.size[1]; j++) {
-        let el = Math.floor(Math.random() * this.shapes.length);
-        row.push(this.shapes[el]);
-      }
-      this.board.push(row);
-    }
-  }
-
-  parse_json(saved_game) {
-    let game = JSON.parse(saved_game);
-    this.board = game['board'];
-    this.size = game['size'];
-    this.shapes = game['shapes'];
-    this.turn = game['turn'];
-    this.player_indices = game['player_indices'];
-    this.last_move = game['last_move'];
-  }
-
-  to_json() {
-    let game = {
-      'board': this.board,
-      'size': this.size,
-      'shapes': this.shapes,
-      'turn': this.turn,
-      'player_indices': this.player_indices,
-      'last_move': this.last_move
-    }
-    return JSON.stringify(game);
-  }
-
   get raw_board() {
     if (this.board) {
       return this.board;
@@ -87,10 +54,10 @@ module.exports = class Filler {
         let new_y = index[1] + dir[1];
 
         if (new_x < 0 || new_x >= this.size[0] ||
-            new_y < 0 || new_y >= this.size[1] ||
-            moves.includes(this.board[new_x][new_y]) ||
-            this.board[new_x][new_y] == this.last_move) {
-              continue;
+          new_y < 0 || new_y >= this.size[1] ||
+          moves.includes(this.board[new_x][new_y]) ||
+          this.board[new_x][new_y] == this.last_move) {
+          continue;
         }
 
         moves.push(this.board[new_x][new_y]);
@@ -98,6 +65,39 @@ module.exports = class Filler {
       }
     }
     return [moves, moves_indices]
+  }
+
+  generate_board() {
+    for (let i = 0; i < this.size[0]; i++) {
+      let row = []
+      for (let j = 0; j < this.size[1]; j++) {
+        let el = Math.floor(Math.random() * this.shapes.length);
+        row.push(this.shapes[el]);
+      }
+      this.board.push(row);
+    }
+  }
+
+  parse_json(saved_game) {
+    let game = JSON.parse(saved_game);
+    this.board = game['board'];
+    this.size = game['size'];
+    this.shapes = game['shapes'];
+    this.turn = game['turn'];
+    this.player_indices = game['player_indices'];
+    this.last_move = game['last_move'];
+  }
+
+  to_json() {
+    let game = {
+      'board': this.board,
+      'size': this.size,
+      'shapes': this.shapes,
+      'turn': this.turn,
+      'player_indices': this.player_indices,
+      'last_move': this.last_move
+    }
+    return JSON.stringify(game);
   }
 
   apply_move(move, msg) {
