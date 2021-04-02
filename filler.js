@@ -67,6 +67,23 @@ module.exports = class Filler {
     return [moves, moves_indices]
   }
 
+  // Temporary function to save the idea of it
+  // and move to the construct_image logic.
+  fill_square_submatrices(n) {
+    let temp_board = this.board;
+    for (let row = 0; row <= this.size[0] - n; row += n) {
+      for (let col = 0; col <= this.size[1] - n; col += n) {
+        let el = Math.floor(Math.random() * this.shapes.length);
+        for (let i = row; i < row + n; i++) {
+          for (let j = col; j < col + n; j++) {
+            temp_board[i][j] = this.shapes[el];
+          }
+        }
+      }
+    }
+    return temp_board;
+  }
+
   generate_board() {
     for (let i = 0; i < this.size[0]; i++) {
       let row = []
