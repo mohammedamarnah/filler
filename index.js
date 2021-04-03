@@ -3,13 +3,14 @@ const Redis = require("redis");
 const Filler = require("./filler.js");
 
 const bot = new Discord.Client();
-// const client = Redis.createClient();
+const client = Redis.createClient();
 
 const TOKEN = process.env.DISCORD_TOKEN;
 
 const available_commands = {
   "new_game": "initializes a new game.",
-  "end_game": "ends a running game.",
+  "end_game [id]": "ends a running game.",
+  "move [id] [move]": "applies a move to a running game.",
   "leaderboard": "shows the leaderboard.",
   "help": "lists all commands that you can use."
 };
@@ -27,19 +28,22 @@ function printAvailableCommands(msg) {
 }
 
 function new_game(msg) {
-  let game = new Filler(size, shapes);
-  game.generate_board();
-  global_game = game.to_json();
-  game.send_update(msg);
-  delete game;
+  client.incr("last_game_id", (err, res) => {
+    if (!err) {
+      let game = new Filler(res, size, shapes);
+      game.generate_board();
+      game.save_redis(client);
+      game.send_update(msg, true);
+      delete game;
+    }
+  });
 }
 
-function apply_move(msg, move) {
+function apply_move(msg, json_game, move) {
   let game = new Filler();
-  game.parse_json(global_game);
+  game.parse_json(json_game);
   game.apply_move(move, msg);
-  global_game = game.to_json();
-  game.send_update(msg);
+  game.save_redis(client, msg);
   delete game;
 }
 
@@ -57,11 +61,22 @@ bot.on('message', msg => {
         new_game(msg);
         break;
       case "move":
-        if (global_game === "") {
-          msg.reply("There are no running games. Create a new game using '!filler new_game'.");
-          return;
-        }
-        apply_move(msg, command[2]);
+        client.hget("games", command[2], (err, res) => {
+          if (err || !res) {
+            msg.reply("There are no running games with that id. Create a new game using '!filler new_game'.");
+            return;
+          }
+          apply_move(msg, res, command[3]);
+        });
+        break;
+      case "end_game":
+        client.hdel("games", command[2], (err, res) => {
+          if (err || !res) {
+            msg.reply("There are no running games with that id. Please provide a game id to end.");
+            return;
+          }
+          msg.reply(`game with id ${command[2]} ended successfully.`);
+        });
         break;
       case "help":
         printAvailableCommands(msg);

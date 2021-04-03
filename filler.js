@@ -1,7 +1,8 @@
 module.exports = class Filler {
   // TODO: get/generate game `id` when
   // initializing a new game.
-  constructor(size = [], shapes = []) {
+  constructor(id = -1, size = [], shapes = []) {
+    this.id = id;
     this.size = size;
     this.shapes = shapes;
     this.board = [];
@@ -67,6 +68,12 @@ module.exports = class Filler {
     return [moves, moves_indices]
   }
 
+  get winner() {
+    if (this.player_indices[0] > this.player_indices[1])
+      return 0;
+    return 1;
+  }
+
   // Temporary function to save the idea of it
   // and move to the construct_image logic.
   fill_square_submatrices(n) {
@@ -107,6 +114,7 @@ module.exports = class Filler {
 
   to_json() {
     let game = {
+      'id': this.id,
       'board': this.board,
       'size': this.size,
       'shapes': this.shapes,
@@ -138,12 +146,26 @@ module.exports = class Filler {
     this.last_move = move;
   }
 
-  send_update(msg) {
+  send_update(msg, first_time = false) {
     msg.channel.send(this.pretty_board);
+    if (first_time) {
+      msg.channel.send(`Your game id is ${this.id}`);
+      msg.channel.send("Play your move by sending '!filler move [id] [move]'")
+    }
     if (this.is_game_finished) {
       msg.channel.send(`Game Finished! Player ${this.winner} wins!`);
     } else {
+      msg.channel.send(`Player 0: ${this.player_indices[0].length} blocks.`);
+      msg.channel.send(`Player 1: ${this.player_indices[1].length} blocks.`);
       msg.channel.send(`Player Turn: ${this.turn}\nChoose one of the following:\n${this.legal_moves[0]}`);
     }
+  }
+
+  save_redis(client, msg) {
+    client.hset("games", this.id, this.to_json(), (err, res) => {
+      if (!err) {
+        this.send_update(msg);
+      }
+    });
   }
 }
