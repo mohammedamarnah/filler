@@ -150,7 +150,7 @@ module.exports = class Filler {
     msg.channel.send(this.pretty_board);
     if (first_time) {
       msg.channel.send(`Your game id is ${this.id}`);
-      msg.channel.send("Play your move by sending '!filler move [id] [move]'")
+      msg.channel.send("Play your move by sending `!filler move [id] [move]`")
     }
     if (this.is_game_finished) {
       msg.channel.send(`Game Finished! Player ${this.winner} wins!`);
@@ -161,10 +161,10 @@ module.exports = class Filler {
     }
   }
 
-  save_redis(client, msg) {
+  save_redis(client, msg, first_time = false) {
     client.hset("games", this.id, this.to_json(), (err, res) => {
       if (!err) {
-        this.send_update(msg);
+        this.send_update(msg, first_time);
       }
     });
   }

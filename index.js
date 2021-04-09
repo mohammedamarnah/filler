@@ -16,13 +16,12 @@ const available_commands = {
 };
 
 const size = [6, 6];
-const shapes = ['*', '-', '^', '#', '@', '!'];
-let global_game = "";
+const shapes = ['B', 'R', 'G', 'Y', 'P', 'b'];
 
 function printAvailableCommands(msg) {
   let result = "Here are some commands that you can use:\n";
   for (command in available_commands) {
-    result += `!filler ${command} - ${available_commands[command]}\n`;
+    result += `\`!filler ${command}\` - ${available_commands[command]}\n`;
   }
   msg.reply(result);
 }
@@ -32,8 +31,7 @@ function new_game(msg) {
     if (!err) {
       let game = new Filler(res, size, shapes);
       game.generate_board();
-      game.save_redis(client);
-      game.send_update(msg, true);
+      game.save_redis(client, msg, true);
       delete game;
     }
   });
@@ -42,7 +40,7 @@ function new_game(msg) {
 function apply_move(msg, json_game, move) {
   let game = new Filler();
   game.parse_json(json_game);
-  game.apply_move(move, msg);
+  game.apply_move(move, msg)
   game.save_redis(client, msg);
   delete game;
 }
@@ -77,6 +75,8 @@ bot.on('message', msg => {
           }
           msg.reply(`game with id ${command[2]} ended successfully.`);
         });
+        break;
+      case "leaderboard":
         break;
       case "help":
         printAvailableCommands(msg);
