@@ -1,3 +1,5 @@
+const { exec } = require('child_process');
+
 module.exports = class Filler {
   // TODO: get/generate game `id` when
   // initializing a new game.
@@ -114,13 +116,13 @@ module.exports = class Filler {
 
   to_json() {
     let game = {
-      'id': this.id,
-      'board': this.board,
-      'size': this.size,
-      'shapes': this.shapes,
-      'turn': this.turn,
-      'player_indices': this.player_indices,
-      'last_move': this.last_move
+      id: this.id,
+      board: this.board,
+      size: this.size,
+      shapes: this.shapes,
+      turn: this.turn,
+      player_indices: this.player_indices,
+      last_move: this.last_move
     }
     return JSON.stringify(game);
   }
@@ -147,25 +149,37 @@ module.exports = class Filler {
   }
 
   send_update(msg, first_time = false) {
-    msg.channel.send(this.pretty_board);
-    if (first_time) {
-      msg.channel.send(`Your game id is ${this.id}`);
-      msg.channel.send("Play your move by sending `!filler move [id] [move]`")
-    }
-    if (this.is_game_finished) {
-      msg.channel.send(`Game Finished! Player ${this.winner} wins!`);
-    } else {
-      msg.channel.send(`Player 0: ${this.player_indices[0].length} blocks.`);
-      msg.channel.send(`Player 1: ${this.player_indices[1].length} blocks.`);
-      msg.channel.send(`Player Turn: ${this.turn}\nChoose one of the following:\n${this.legal_moves[0]}`);
-    }
+    msg.channel.send("", {files: [`${this.id}.png`]})
+    .then(_ => {
+      if (first_time) {
+        msg.channel.send(`Your game id is ${this.id}`);
+        msg.channel.send("Play your move by sending `!filler move [id] [move]`")
+      }
+      if (this.is_game_finished) {
+        msg.channel.send(`Game Finished! Player ${this.winner} wins!`);
+      } else {
+        msg.channel.send(`Player 0: ${this.player_indices[0].length} blocks.`);
+        msg.channel.send(`Player 1: ${this.player_indices[1].length} blocks.`);
+        msg.channel.send(`Player Turn: ${this.turn}\nChoose one of the following:\n${this.legal_moves[0]}`);
+      }
+    })
+    .catch(console.error);
   }
 
   save_redis(client, msg, first_time = false) {
     client.hset("games", this.id, this.to_json(), (err, res) => {
-      if (!err) {
-        this.send_update(msg, first_time);
+      if (err) {
+        console.error(err);
+        return;
       }
+      let cmd = `python3 image_construct.py \'${this.to_json()}\'`;
+      exec(cmd, (err, stdout, stderr) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        this.send_update(msg, first_time);
+      });
     });
   }
 }

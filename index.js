@@ -15,7 +15,7 @@ const available_commands = {
   "help": "lists all commands that you can use."
 };
 
-const size = [6, 6];
+const size = [8, 8];
 const shapes = ['B', 'R', 'G', 'Y', 'P', 'b'];
 
 function printAvailableCommands(msg) {
